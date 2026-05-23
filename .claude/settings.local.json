@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd.exe /c \"dir /s /b C:\\\\Users\\\\athaa\\\\Downloads\\\\*.pdf C:\\\\Users\\\\athaa\\\\Desktop\\\\*.pdf C:\\\\Users\\\\athaa\\\\Documents\\\\*.pdf 2>nul\")"
+    ]
+  }
+}
