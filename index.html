@@ -165,11 +165,67 @@ main { position: relative; z-index: 2; }
   box-shadow: var(--accent-glow);
 }
 
-.nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+.nav-burger { display: none; flex-direction: column; gap: 5.5px; cursor: pointer; padding: 4px; }
 .nav-burger span {
-  display: block; width: 24px; height: 1.5px;
+  display: block; width: 24px; height: 2px;
   background: var(--maroon); border-radius: 2px;
-  transition: transform 0.3s, opacity 0.3s;
+  transition: transform 0.3s ease, opacity 0.2s ease, width 0.3s ease;
+  transform-origin: center;
+}
+.nav-burger.active span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.nav-burger.active span:nth-child(2) { opacity: 0; width: 0; }
+.nav-burger.active span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+body.menu-open { overflow: hidden; }
+
+/* ============================================================
+   MOBILE FULL-SCREEN MENU (separate from navbar stacking context)
+   ============================================================ */
+#mobile-nav {
+  display: none;
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+#mobile-nav.open { display: flex; }
+
+#mobile-nav-close {
+  position: absolute; top: 20px; right: 22px;
+  background: none; border: none; cursor: pointer;
+  color: var(--maroon); padding: 10px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+#mobile-nav-close:hover { background: rgba(139,26,46,0.08); }
+
+.mobile-nav-links {
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 340px; padding: 0 32px;
+}
+.mobile-nav-links a {
+  font-family: var(--ff-head);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text);
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.2s, padding-left 0.2s;
+  display: block;
+}
+.mobile-nav-links a:last-child { border-bottom: none; }
+.mobile-nav-links a:hover { color: var(--maroon); padding-left: 10px; }
+
+.mobile-nav-footer {
+  position: absolute; bottom: 36px;
+  font-family: var(--ff-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
 }
 
 /* ============================================================
@@ -757,14 +813,6 @@ footer {
   .ach-card { flex: 0 0 100%; }
 }
 
-.nav-links.open {
-  display: flex; flex-direction: column;
-  position: fixed; inset: 0;
-  background: rgba(250,247,242,0.97);
-  justify-content: center; align-items: center;
-  gap: 40px; z-index: 99;
-}
-.nav-links.open a { font-size: 1.2rem; }
 </style>
 </head>
 <body>
@@ -773,6 +821,24 @@ footer {
 <div id="cursor-ring"></div>
 <div id="scroll-progress"></div>
 <canvas id="bg-canvas"></canvas>
+
+<!-- MOBILE FULL-SCREEN MENU -->
+<div id="mobile-nav" aria-hidden="true">
+  <button id="mobile-nav-close" aria-label="Close menu">
+    <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+  <nav class="mobile-nav-links">
+    <a href="#about">About</a>
+    <a href="#experience">Experience</a>
+    <a href="#projects">Projects</a>
+    <a href="#skills">Skills</a>
+    <a href="#achievements">Awards</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <div class="mobile-nav-footer">Athaar Naqvi · 2026</div>
+</div>
 
 <!-- NAVBAR -->
 <nav id="navbar">
@@ -1347,18 +1413,39 @@ let lastY = 0;
 window.addEventListener('scroll', () => {
   const y = window.scrollY;
   nav.classList.toggle('scrolled', y > 60);
-  nav.classList.toggle('hidden', y > lastY + 10 && y > 200);
-  if (y < lastY - 10 || y < 80) nav.classList.remove('hidden');
+  if (navLinks.classList.contains('open')) {
+    nav.classList.remove('hidden');
+  } else {
+    nav.classList.toggle('hidden', y > lastY + 10 && y > 200);
+    if (y < lastY - 10 || y < 80) nav.classList.remove('hidden');
+  }
   lastY = y;
 });
 
-/* ---- Burger ---- */
-const burger = document.getElementById('burger');
-const navLinks = document.getElementById('navLinks');
-burger.addEventListener('click', () => navLinks.classList.toggle('open'));
-navLinks.querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => navLinks.classList.remove('open'));
+/* ---- Mobile menu ---- */
+const burger    = document.getElementById('burger');
+const mobileNav = document.getElementById('mobile-nav');
+const mobileClose = document.getElementById('mobile-nav-close');
+
+function openMenu() {
+  mobileNav.classList.add('open');
+  mobileNav.setAttribute('aria-hidden', 'false');
+  burger.classList.add('active');
+  document.body.classList.add('menu-open');
+  nav.classList.remove('hidden');
+}
+function closeMenu() {
+  mobileNav.classList.remove('open');
+  mobileNav.setAttribute('aria-hidden', 'true');
+  burger.classList.remove('active');
+  document.body.classList.remove('menu-open');
+}
+
+burger.addEventListener('click', () => {
+  mobileNav.classList.contains('open') ? closeMenu() : openMenu();
 });
+mobileClose.addEventListener('click', closeMenu);
+mobileNav.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
 
 /* ---- Typewriter ---- */
 const words = ['AI Engineer', 'Backend Developer', 'NLP Enthusiast', 'Systems Builder'];
